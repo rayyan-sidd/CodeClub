@@ -36,8 +36,8 @@ export const teamMembers = [
     {
         id: 6,
         name: "Mohammad Kamran",
-        role: "Technical Support",
-        image: null,
+        role: "UI-UX Designer",
+        image: "/TeamMembers/Kamran.png",
         category: "member"
     },
     {
