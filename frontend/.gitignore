@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 
 .env
+
+# Raw local media uploads (hosted on Supabase Storage CDN)
+public/gallery/
+public/CodeClashLeague/

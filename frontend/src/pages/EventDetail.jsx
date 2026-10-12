@@ -23,6 +23,15 @@ export default function EventDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(24);
+
+  const getBentoSpan = (index, total) => {
+    if (total === 1) return "sm:col-span-2 lg:col-span-3 min-h-[380px]";
+    const mod = index % 8;
+    if (mod === 0) return "sm:col-span-2 sm:row-span-2 min-h-[360px]";
+    if (mod === 5) return "sm:col-span-2 min-h-[260px]";
+    return "col-span-1 min-h-[240px]";
+  };
 
   // Strictly query Supabase for this event and its media
   useEffect(() => {
@@ -249,21 +258,33 @@ export default function EventDetail() {
         </div>
 
         {media.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 auto-rows-[280px]">
-            {media.map((item, i) => (
-              <BentoTile
-                key={item.id || i}
-                imageUrl={item.image_url}
-                alt={item.caption || event.title}
-                caption={item.caption}
-                span={
-                  media.length === 1
-                    ? "sm:col-span-2 row-span-2 min-h-[360px]"
-                    : "col-span-1 min-h-[260px]"
-                }
-                onSelect={() => setLightboxIndex(i)}
-              />
-            ))}
+          <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 auto-rows-[240px]">
+              {media.slice(0, visibleCount).map((item, i) => (
+                <BentoTile
+                  key={item.id || i}
+                  imageUrl={item.image_url}
+                  alt={item.caption || event.title}
+                  caption={item.caption}
+                  span={getBentoSpan(i, media.length)}
+                  onSelect={() => setLightboxIndex(i)}
+                />
+              ))}
+            </div>
+
+            {visibleCount < media.length && (
+              <div className="flex justify-center mt-8">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVisibleCount((prev) => Math.min(prev + 24, media.length))
+                  }
+                  className="px-6 py-3 rounded-2xl bg-brand-surface border border-brand-border hover:border-brand-accent text-xs font-semibold text-brand-text hover:text-brand-accent transition-all cursor-pointer shadow-lg hover:shadow-brand-accent/5"
+                >
+                  Load More Photos ({media.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="p-10 rounded-3xl bg-brand-surface border border-brand-border text-center text-xs text-brand-muted">

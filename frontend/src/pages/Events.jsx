@@ -79,7 +79,9 @@ export default function Events() {
       event.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
-      statusFilter === "all" ? true : event.status === statusFilter;
+      statusFilter === "all"
+        ? true
+        : event.status?.toLowerCase() === statusFilter.toLowerCase();
 
     return matchesSearch && matchesStatus;
   });
@@ -245,7 +247,7 @@ export default function Events() {
                 {/* Status Pill */}
                 <span
                   className={`absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-full border capitalize backdrop-blur-md ${
-                    statusStyles[event.status] || statusStyles.completed
+                    statusStyles[event.status?.toLowerCase()] || statusStyles.completed
                   }`}
                 >
                   {event.status}
