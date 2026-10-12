@@ -46,8 +46,13 @@ export default function Practice() {
     setActiveTab("description");
   }, [selectedProblemId]);
 
-  // Handle Tab key in code editor
+  // Handle Tab and Ctrl+Enter keys in code editor
   const handleKeyDown = (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      runCodeTests(false);
+      return;
+    }
     if (e.key === "Tab") {
       e.preventDefault();
       const start = e.target.selectionStart;

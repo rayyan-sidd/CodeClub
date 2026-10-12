@@ -13,24 +13,28 @@ const navLinks = [
 
 function Logo({ onClick }) {
   return (
-    <Link to="/" onClick={onClick} className="flex items-center gap-2 min-w-0 group">
+    <Link to="/" onClick={onClick} className="flex items-center gap-2.5 min-w-0 group">
       <img
         src="/logo.svg"
-        className="h-10 sm:h-12 shrink-0 group-hover:scale-105 transition-transform"
+        className="h-9 sm:h-11 shrink-0 group-hover:scale-105 transition-transform"
         alt="CodeClub logo"
       />
       <div className="flex flex-col leading-tight">
+        <div className="flex items-center gap-2">
+          <span
+            className="text-lg sm:text-xl font-extrabold text-brand-text tracking-tight"
+          >
+            Code<span className="text-brand-accent">Club</span>
+          </span>
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium text-brand-accent bg-brand-accent/10 border border-brand-accent/25">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
+            <span>IU</span>
+          </span>
+        </div>
         <span
-          className="text-lg sm:text-xl font-bold text-brand-text leading-tight"
-          style={{ lineHeight: "1.05" }}
+          className="text-[11px] text-brand-muted font-medium tracking-wide"
         >
-          Code<span className="text-brand-accent">Club</span>
-        </span>
-        <span
-          className="text-xs text-brand-muted leading-tight"
-          style={{ lineHeight: "1.05" }}
-        >
-          IU Lucknow
+          Dept. of CSE
         </span>
       </div>
     </Link>
@@ -58,7 +62,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 w-full z-50 backdrop-blur-md bg-brand-surface/85 border-b border-brand-border">
+      <nav className="fixed top-0 left-0 right-0 w-full z-50 backdrop-blur-xl bg-brand-bg/85 border-b border-brand-border/70 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5">
           {/* Mobile / tablet top row */}
           <div className="grid grid-cols-3 items-center lg:hidden">

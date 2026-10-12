@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { teamMembers } from "../data/teamMembers";
 import TeamMemberCard from "../components/TeamMemberCard";
+import MemberProfileModal from "../components/MemberProfileModal";
 import { Sparkles, Users, ArrowRight, ShieldCheck, Award } from "lucide-react";
 
 export default function Team() {
   const [activeCategory, setActiveCategory] = useState("all");
+  const [selectedMember, setSelectedMember] = useState(null);
 
   const advisors = teamMembers.filter((m) => m.category === "advisor");
   const coordinators = teamMembers.filter((m) => m.category === "coordinator");
@@ -15,6 +17,20 @@ export default function Team() {
     activeCategory === "all"
       ? teamMembers
       : teamMembers.filter((m) => m.category === activeCategory);
+
+  const handlePrevMember = () => {
+    if (!selectedMember) return;
+    const currentIndex = teamMembers.findIndex((m) => m.id === selectedMember.id);
+    const prevIndex = currentIndex === 0 ? teamMembers.length - 1 : currentIndex - 1;
+    setSelectedMember(teamMembers[prevIndex]);
+  };
+
+  const handleNextMember = () => {
+    if (!selectedMember) return;
+    const currentIndex = teamMembers.findIndex((m) => m.id === selectedMember.id);
+    const nextIndex = currentIndex === teamMembers.length - 1 ? 0 : currentIndex + 1;
+    setSelectedMember(teamMembers[nextIndex]);
+  };
 
   return (
     <section className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-12 z-10">
@@ -77,6 +93,7 @@ export default function Team() {
                   github={member.github}
                   linkedin={member.linkedin}
                   featured
+                  onClick={() => setSelectedMember(member)}
                 />
               ))}
             </div>
@@ -101,6 +118,7 @@ export default function Team() {
                     github={member.github}
                     linkedin={member.linkedin}
                     featured
+                    onClick={() => setSelectedMember(member)}
                   />
                 </div>
               ))}
@@ -125,6 +143,7 @@ export default function Team() {
                   photo={member.image}
                   github={member.github}
                   linkedin={member.linkedin}
+                  onClick={() => setSelectedMember(member)}
                 />
               ))}
             </div>
@@ -143,6 +162,7 @@ export default function Team() {
               github={member.github}
               linkedin={member.linkedin}
               featured={member.category !== "member"}
+              onClick={() => setSelectedMember(member)}
             />
           ))}
         </div>
@@ -165,6 +185,16 @@ export default function Team() {
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
+
+      {/* Discord Style Profile Modal */}
+      {selectedMember && (
+        <MemberProfileModal
+          member={selectedMember}
+          onClose={() => setSelectedMember(null)}
+          onPrev={handlePrevMember}
+          onNext={handleNextMember}
+        />
+      )}
     </section>
   );
 }

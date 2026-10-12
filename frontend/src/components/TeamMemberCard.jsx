@@ -32,28 +32,42 @@ export default function TeamMemberCard({
   featured,
   github,
   linkedin,
+  onClick,
 }) {
-  const avatarSize = featured ? "w-20 h-20 text-xl" : "w-16 h-16 text-base";
+  const avatarSize = featured ? "w-24 h-24 text-xl" : "w-20 h-20 text-base";
 
   return (
     <div
-      className={`group relative bg-brand-surface border border-brand-border hover:border-brand-accent/60 rounded-2xl p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-accent/5 flex flex-col items-center justify-between z-10`}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick && onClick();
+        }
+      }}
+      className={`group relative glass-panel-glow rounded-3xl p-6 text-center transition-all duration-300 hover:-translate-y-1.5 flex flex-col items-center justify-between z-10 cursor-pointer ${
+        featured ? "border-brand-accent/30 shadow-[0_0_25px_rgba(16,185,129,0.08)]" : ""
+      }`}
     >
       <div className="w-full flex flex-col items-center">
         {photo ? (
           <div className="relative mb-4">
-            <img
-              src={photo}
-              alt={name}
-              className={`rounded-full object-cover border-2 border-brand-border group-hover:border-brand-accent transition-colors shadow-md ${avatarSize}`}
-            />
+            <div className="rounded-full p-1 bg-gradient-to-tr from-brand-accent/40 via-brand-border to-brand-accent/10 group-hover:from-brand-accent group-hover:to-teal-400 transition-all duration-500 shadow-md">
+              <img
+                src={photo}
+                alt={name}
+                className={`rounded-full object-cover transition-transform duration-500 group-hover:scale-105 ${avatarSize}`}
+              />
+            </div>
             {featured && (
-              <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-brand-accent border-2 border-brand-surface" />
+              <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-brand-accent border-2 border-brand-surface shadow-sm" />
             )}
           </div>
         ) : (
           <div
-            className={`rounded-full bg-gradient-to-tr from-brand-surface to-brand-border border-2 border-brand-accent/40 text-brand-accent font-bold flex items-center justify-center mb-4 group-hover:border-brand-accent transition-colors shadow-md ${avatarSize}`}
+            className={`rounded-full bg-gradient-to-tr from-brand-surface via-brand-border to-brand-surface border-2 border-brand-accent/30 text-brand-accent font-bold flex items-center justify-center mb-4 group-hover:border-brand-accent transition-all duration-300 shadow-md ${avatarSize}`}
           >
             {getInitials(name)}
           </div>
@@ -63,26 +77,35 @@ export default function TeamMemberCard({
           {name}
         </h3>
 
-        <p className="text-xs font-semibold text-brand-accent mt-0.5 mb-1">
-          {role}
-        </p>
+        <div className="mt-1 mb-1.5">
+          <span className="text-[11px] font-mono font-medium text-brand-accent bg-brand-accent/10 border border-brand-accent/20 px-2.5 py-0.5 rounded-full inline-block">
+            {role}
+          </span>
+        </div>
 
         {department && (
-          <p className="text-[11px] text-brand-muted">
+          <p className="text-[11px] text-brand-muted leading-tight">
             {department}
           </p>
         )}
+
+        <span className="text-[10px] text-brand-muted/70 group-hover:text-brand-accent transition-colors mt-2">
+          Click to view profile ↗
+        </span>
       </div>
 
-      {/* Social Icons row */}
+      {/* Social Links Row */}
       {(github || linkedin) && (
-        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-brand-border/50 w-full justify-center">
+        <div 
+          className="flex items-center gap-2 mt-3 pt-3 border-t border-brand-border/60 w-full justify-center"
+          onClick={(e) => e.stopPropagation()}
+        >
           {github && (
             <a
               href={github}
               target="_blank"
               rel="noreferrer"
-              className="p-1.5 rounded-lg text-brand-muted hover:text-brand-accent hover:bg-brand-bg transition-colors"
+              className="p-1.5 rounded-xl text-brand-muted hover:text-brand-accent hover:bg-brand-surface border border-transparent hover:border-brand-border transition-all cursor-pointer"
               aria-label={`${name}'s GitHub`}
             >
               <GithubIcon className="w-4 h-4" />
@@ -93,7 +116,7 @@ export default function TeamMemberCard({
               href={linkedin}
               target="_blank"
               rel="noreferrer"
-              className="p-1.5 rounded-lg text-brand-muted hover:text-brand-accent hover:bg-brand-bg transition-colors"
+              className="p-1.5 rounded-xl text-brand-muted hover:text-brand-accent hover:bg-brand-surface border border-transparent hover:border-brand-border transition-all cursor-pointer"
               aria-label={`${name}'s LinkedIn`}
             >
               <LinkedinIcon className="w-4 h-4" />

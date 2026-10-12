@@ -192,20 +192,28 @@ export default function Footer() {
 
         {/* Bottom Row */}
         <div className="pt-8 border-t border-brand-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-muted">
-          <div className="flex items-center gap-1">
-            <span>© {new Date().getFullYear()} CodeClub Integral University. Built by students with</span>
-            <Heart className="w-3.5 h-3.5 text-red-400 fill-red-400 mx-0.5 inline" />
+          <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+            <span>© {new Date().getFullYear()} CodeClub Integral University. Built with</span>
+            <Heart className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400 mx-0.5 inline" />
+            <span>by student engineers.</span>
           </div>
 
-          <button
-            onClick={scrollToTop}
-            type="button"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-border hover:border-brand-accent/50 hover:text-brand-accent transition-all cursor-pointer bg-brand-stats-bg"
-            aria-label="Back to top"
-          >
-            <span>Back to top</span>
-            <ArrowUp className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex items-center gap-4">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>All Systems Live</span>
+            </span>
+
+            <button
+              onClick={scrollToTop}
+              type="button"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-brand-border hover:border-brand-accent/50 hover:text-brand-accent transition-all cursor-pointer bg-brand-surface text-brand-muted hover:scale-105"
+              aria-label="Back to top"
+            >
+              <span>Top</span>
+              <ArrowUp className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </footer>
