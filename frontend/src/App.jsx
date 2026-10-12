@@ -15,7 +15,6 @@ import EventDetail from "./pages/EventDetail";
 import { supabase } from "./lib/supabaseClient.js";
 import { stats } from "./data/stats.js";
 import { focusAreas } from "./data/focusAreas.js";
-import { galleryItems } from "./data/mockgallery.js";
 
 import { Route, Routes, Navigate } from "react-router-dom";
 
@@ -63,7 +62,6 @@ export default function App() {
                 nextEvent={nextEvent}
                 stats={stats}
                 focusAreas={focusAreas}
-                galleryItems={galleryItems}
                 upcomingEvents={upcomingEvents}
               />
             }
