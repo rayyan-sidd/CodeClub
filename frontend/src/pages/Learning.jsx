@@ -264,10 +264,10 @@ export default function Learning() {
                 </a>
 
                 <Link
-                  to="/contact"
-                  className="text-xs text-brand-muted hover:text-brand-text transition-colors"
+                  to="/practice"
+                  className="text-xs font-semibold text-brand-accent hover:text-white transition-colors"
                 >
-                  Join Study Group →
+                  Practice Live →
                 </Link>
               </div>
             </div>

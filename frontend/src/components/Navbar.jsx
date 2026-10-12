@@ -4,6 +4,7 @@ import { Menu, X, LogIn, Sparkles, Mail } from "lucide-react";
 
 const navLinks = [
   { to: "/", label: "Home" },
+  { to: "/practice", label: "Practice" },
   { to: "/learning", label: "Learning" },
   { to: "/events", label: "Events & Media" },
   { to: "/team", label: "Team" },

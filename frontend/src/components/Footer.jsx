@@ -85,6 +85,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/practice" className="hover:text-brand-accent transition-colors">
+                  Practice Arena (POTD)
+                </Link>
+              </li>
+              <li>
                 <Link to="/learning" className="hover:text-brand-accent transition-colors">
                   Learning Roadmap
                 </Link>

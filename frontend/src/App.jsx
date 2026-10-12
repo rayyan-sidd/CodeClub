@@ -4,6 +4,7 @@ import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 
 import Home from "./pages/Home";
+import Practice from "./pages/Practice";
 import Events from "./pages/Events";
 import Team from "./pages/Team";
 import Contact from "./pages/Contact";
@@ -41,6 +42,7 @@ export default function App() {
               />
             }
           />
+          <Route path="/practice" element={<Practice />} />
           <Route path="/events" element={<Events />} />
           <Route path="/events/:id" element={<EventDetail />} />
           <Route path="/gallery" element={<Navigate to="/events" replace />} />
