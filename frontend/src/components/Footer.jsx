@@ -81,17 +81,12 @@ export default function Footer() {
               </li>
               <li>
                 <Link to="/events" className="hover:text-brand-accent transition-colors">
-                  Events & Hackathons
+                  Events & Media Hub
                 </Link>
               </li>
               <li>
                 <Link to="/learning" className="hover:text-brand-accent transition-colors">
                   Learning Roadmap
-                </Link>
-              </li>
-              <li>
-                <Link to="/gallery" className="hover:text-brand-accent transition-colors">
-                  Community Gallery
                 </Link>
               </li>
               <li>

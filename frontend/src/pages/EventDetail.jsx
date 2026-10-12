@@ -3,34 +3,24 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient.js";
 import BentoTile from "../components/BentoTile";
 import { events as mockEvents } from "../data/mockEvents.js";
-import { galleryItems } from "../data/mockgallery.js";
-
-function getSpanPattern(count) {
-  if (count === 1) return ["col-span-2 md:col-span-4 row-span-2"];
-  if (count === 2) return ["col-span-2 row-span-2", "col-span-2 row-span-2"];
-  if (count === 3)
-    return [
-      "col-span-2 row-span-2",
-      "col-span-1 row-span-1",
-      "col-span-1 row-span-1",
-    ];
-  if (count === 4)
-    return [
-      "col-span-2 row-span-2",
-      "col-span-1 row-span-1",
-      "col-span-1 row-span-1",
-      "col-span-2 row-span-1",
-    ];
-  const base = [
-    "col-span-2 row-span-2",
-    "col-span-1 row-span-1",
-    "col-span-1 row-span-1",
-    "col-span-1 row-span-2",
-    "col-span-2 row-span-1",
-    "col-span-1 row-span-1",
-  ];
-  return Array.from({ length: count }, (_, i) => base[i % base.length]);
-}
+import {
+  Calendar,
+  Sparkles,
+  ArrowLeft,
+  Code2,
+  Terminal,
+  Trophy,
+  Camera,
+  MapPin,
+  Users,
+  CheckCircle2,
+  Maximize2,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Bookmark,
+  Share2,
+} from "lucide-react";
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -38,6 +28,7 @@ export default function EventDetail() {
   const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lightboxIndex, setLightboxIndex] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -53,16 +44,11 @@ export default function EventDetail() {
         ]);
 
         if (eventRes.error || !eventRes.data) {
-          // Gracefully fallback to mock event
+          // Fallback to our curated events
           const fallback = mockEvents.find((e) => String(e.id) === String(id));
           if (fallback) {
             setEvent(fallback);
-            const fallbackMedia = galleryItems.map((g, i) => ({
-              id: `mock-${i}`,
-              image_url: g.imageUrl,
-              caption: g.title,
-            }));
-            setMedia(fallbackMedia);
+            setMedia(fallback.media || []);
             setError(null);
           } else {
             setError(eventRes.error || new Error("Event not found"));
@@ -75,13 +61,7 @@ export default function EventDetail() {
         const fallback = mockEvents.find((e) => String(e.id) === String(id));
         if (fallback) {
           setEvent(fallback);
-          setMedia(
-            galleryItems.map((g, i) => ({
-              id: `mock-${i}`,
-              image_url: g.imageUrl,
-              caption: g.title,
-            }))
-          );
+          setMedia(fallback.media || []);
         } else {
           setError(err);
         }
@@ -95,84 +75,341 @@ export default function EventDetail() {
   const formatDate = (dateStr) =>
     new Date(dateStr).toLocaleDateString("en-IN", {
       day: "numeric",
-      month: "short",
+      month: "long",
       year: "numeric",
     });
 
+  const activePhoto = lightboxIndex !== null ? media[lightboxIndex] : null;
+
+  const handlePrev = (e) => {
+    e?.stopPropagation();
+    setLightboxIndex((prev) => (prev === 0 ? media.length - 1 : prev - 1));
+  };
+
+  const handleNext = (e) => {
+    e?.stopPropagation();
+    setLightboxIndex((prev) => (prev === media.length - 1 ? 0 : prev + 1));
+  };
+
+  // Keyboard navigation for photo lightbox
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (lightboxIndex === null) return;
+      if (e.key === "Escape") setLightboxIndex(null);
+      if (e.key === "ArrowLeft") handlePrev();
+      if (e.key === "ArrowRight") handleNext();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxIndex, media.length]);
+
   if (loading)
     return (
-      <div className="max-w-5xl mx-auto px-6 py-16 text-zinc-400">
-        Loading...
+      <div className="max-w-5xl mx-auto px-6 py-24 text-center text-brand-muted">
+        Loading event details...
       </div>
     );
+
   if (error || !event)
     return (
-      <div className="max-w-5xl mx-auto px-6 py-16 text-center">
-        <p className="text-red-400">Couldn't load this event.</p>
+      <div className="max-w-5xl mx-auto px-6 py-24 text-center">
+        <p className="text-red-400 font-semibold mb-2">Event Not Found</p>
+        <p className="text-xs text-brand-muted mb-6">
+          The requested event record does not exist or has been moved.
+        </p>
         <Link
           to="/events"
-          className="text-emerald-400 text-sm hover:underline mt-2 inline-block"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-accent text-brand-bg font-semibold rounded-xl text-xs hover:bg-[#0d9668] transition-all"
         >
-          ← Back to Events
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Events & Media</span>
         </Link>
       </div>
     );
 
-  const spans = getSpanPattern(media.length);
-
   return (
-    <div>
-      <div className="relative w-full h-[45vh] min-h-[320px] z-10">
+    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 z-10">
+      {/* Top Navigation */}
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <Link
+          to="/events"
+          className="inline-flex items-center gap-2 text-xs font-medium text-brand-muted hover:text-brand-accent transition-colors bg-brand-surface border border-brand-border px-3.5 py-1.5 rounded-xl"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to Events & Media</span>
+        </Link>
+
+        <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-brand-accent/10 text-brand-accent border border-brand-accent/30 capitalize">
+          <Sparkles className="w-3 h-3" />
+          <span>{event.status} Event</span>
+        </div>
+      </div>
+
+      {/* Hero Header Bento Tile */}
+      <div className="relative rounded-3xl overflow-hidden border border-brand-border bg-brand-surface mb-8 min-h-[320px] sm:min-h-[380px] flex flex-col justify-end p-6 sm:p-10 shadow-2xl">
         {event.cover_image_url ? (
           <img
             src={event.cover_image_url}
             alt={event.title}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover filter brightness-[0.45] transition-transform duration-700 hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900" />
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-surface via-brand-border to-brand-bg flex items-center justify-center">
+            <Sparkles className="w-24 h-24 text-brand-accent/20" />
+          </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-black/20" />
-        <div className="absolute bottom-0 left-0 right-0 max-w-5xl mx-auto px-6 pb-8 w-full">
-          <Link
-            to="/events"
-            className="text-zinc-300 hover:text-emerald-400 text-sm mb-4 inline-block"
-          >
-            ← Back to Events
-          </Link>
-          <h1 className="text-4xl font-bold text-white mb-2">{event.title}</h1>
-          <p className="text-zinc-300">{formatDate(event.event_date)}</p>
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-bg via-brand-bg/50 to-transparent" />
+
+        <div className="relative z-10 max-w-3xl">
+          <div className="flex items-center gap-3 text-xs text-brand-text font-mono mb-3">
+            <span className="flex items-center gap-1.5 bg-brand-bg/80 backdrop-blur-md px-3 py-1 rounded-lg border border-brand-border/60">
+              <Calendar className="w-3.5 h-3.5 text-brand-accent" />
+              {formatDate(event.event_date)}
+            </span>
+            <span className="flex items-center gap-1.5 bg-brand-bg/80 backdrop-blur-md px-3 py-1 rounded-lg border border-brand-border/60">
+              <MapPin className="w-3.5 h-3.5 text-brand-accent" />
+              Integral University, Lucknow
+            </span>
+          </div>
+
+          <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-2">
+            {event.title}
+          </h1>
+
+          {event.tagline && (
+            <p className="text-sm sm:text-lg text-emerald-400 font-medium leading-relaxed">
+              {event.tagline}
+            </p>
+          )}
         </div>
       </div>
 
-      <section className="max-w-5xl mx-auto px-6 py-12">
-        {event.description && (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 backdrop-blur-sm p-6 mb-10 max-w-3xl z-10">
-            <p className="text-zinc-300 z-10">{event.description}</p>
+      {/* Bento Grid Architecture */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        {/* Bento Tile 1: The Event Story (Span 2 cols on md/lg) */}
+        <div className="md:col-span-2 bg-brand-surface border border-brand-border hover:border-brand-accent/40 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-xl transition-all">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent">
+                <Bookmark className="w-4 h-4" />
+              </div>
+              <h2 className="text-lg font-bold text-brand-text">
+                The Event Story & Mission
+              </h2>
+            </div>
+            <p className="text-sm text-brand-muted leading-relaxed mb-6">
+              {event.description}
+            </p>
           </div>
-        )}
+
+          <div className="pt-4 border-t border-brand-border/50 flex items-center justify-between text-xs text-brand-muted">
+            <span>Organized by CodeClub IU Lucknow</span>
+            <span className="text-brand-accent font-medium">Department of CSE</span>
+          </div>
+        </div>
+
+        {/* Bento Tile 2: At a Glance Highlights (Span 1 col) */}
+        <div className="bg-brand-surface border border-brand-border hover:border-brand-accent/40 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-xl transition-all">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <h2 className="text-lg font-bold text-brand-text">
+                Key Highlights
+              </h2>
+            </div>
+
+            <ul className="space-y-3 text-xs text-brand-muted">
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-accent mt-1.5 shrink-0" />
+                <span>
+                  <strong className="text-brand-text">Format:</strong>{" "}
+                  {event.rounds && event.rounds.length > 0
+                    ? "3 Multi-Stage Rounds"
+                    : "Interactive Exhibition & Demos"}
+                </span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-accent mt-1.5 shrink-0" />
+                <span>
+                  <strong className="text-brand-text">Eligibility:</strong> Open
+                  to all IU Engineering & Tech Students
+                </span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-accent mt-1.5 shrink-0" />
+                <span>
+                  <strong className="text-brand-text">Recognition:</strong>{" "}
+                  Certificates & Community Honors
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="pt-4 border-t border-brand-border/50 text-xs text-brand-accent font-semibold">
+            Status: {event.status === "completed" ? "Successfully Concluded" : "Upcoming"}
+          </div>
+        </div>
+      </div>
+
+      {/* Bento Section: The 3 Tournament Rounds (for Code Clash League) */}
+      {event.rounds && event.rounds.length > 0 && (
+        <div className="mb-12">
+          <div className="flex items-center gap-2 mb-6">
+            <Trophy className="w-5 h-5 text-brand-accent" />
+            <h2 className="text-xl font-bold text-brand-text">
+              Tournament Rounds Breakdown
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {event.rounds.map((round, idx) => {
+              const Icon = idx === 0 ? Code2 : idx === 1 ? Terminal : Trophy;
+              const accentColor =
+                idx === 0
+                  ? "text-emerald-400"
+                  : idx === 1
+                  ? "text-amber-400"
+                  : "text-teal-400";
+              const borderHover =
+                idx === 0
+                  ? "hover:border-emerald-500/60"
+                  : idx === 1
+                  ? "hover:border-amber-500/60"
+                  : "hover:border-teal-500/60";
+
+              return (
+                <div
+                  key={idx}
+                  className={`p-6 rounded-3xl bg-brand-surface border border-brand-border ${borderHover} transition-all duration-300 hover:-translate-y-1 shadow-xl flex flex-col justify-between`}
+                >
+                  <div>
+                    <div className="w-12 h-12 rounded-2xl bg-brand-bg border border-brand-border flex items-center justify-center mb-4 shadow-inner">
+                      <Icon className={`w-6 h-6 ${accentColor}`} />
+                    </div>
+                    <div className="text-[11px] font-mono text-brand-muted uppercase tracking-wider mb-1">
+                      Stage 0{idx + 1}
+                    </div>
+                    <h3 className="font-bold text-brand-text text-lg mb-2">
+                      {round.name}
+                    </h3>
+                    <p className="text-xs text-brand-muted leading-relaxed">
+                      {round.desc}
+                    </p>
+                  </div>
+
+                  <div className="pt-4 mt-4 border-t border-brand-border/40 text-[11px] font-semibold text-brand-accent">
+                    Completed Round ✓
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Bento Photo Gallery Grid */}
+      <div className="mb-14">
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-2">
+            <Camera className="w-5 h-5 text-brand-accent" />
+            <h2 className="text-xl font-bold text-brand-text">
+              Event Photography & Bento Grid
+            </h2>
+          </div>
+          <span className="text-xs text-brand-muted">
+            Click any photo to expand
+          </span>
+        </div>
 
         {media.length > 0 ? (
-          <div
-            className="grid grid-cols-2 md:grid-cols-4 auto-rows-[140px] gap-3 z-10"
-            style={{ perspective: "800px" }}
-          >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 auto-rows-[280px]">
             {media.map((item, i) => (
               <BentoTile
-                key={item.id}
+                key={item.id || i}
                 imageUrl={item.image_url}
                 alt={item.caption || event.title}
-                span={spans[i]}
-                delay={i * 50}
+                caption={item.caption}
+                span={
+                  media.length === 1
+                    ? "sm:col-span-2 row-span-2 min-h-[360px]"
+                    : "col-span-1 min-h-[260px]"
+                }
+                onSelect={() => setLightboxIndex(i)}
               />
             ))}
           </div>
         ) : (
-          <p className="text-zinc-500 text-sm">
-            No photos added for this event yet.
-          </p>
+          <div className="p-10 rounded-3xl bg-brand-surface border border-brand-border text-center text-xs text-brand-muted">
+            Photos for this event are being curated and will be uploaded shortly.
+          </div>
         )}
-      </section>
+      </div>
+
+      {/* Fullscreen Lightbox Modal */}
+      {activePhoto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn"
+          onClick={() => setLightboxIndex(null)}
+        >
+          <button
+            onClick={() => setLightboxIndex(null)}
+            className="absolute top-5 right-5 text-brand-muted hover:text-white p-2.5 rounded-full bg-brand-surface/70 border border-brand-border hover:border-brand-accent transition-all cursor-pointer z-50"
+            aria-label="Close lightbox"
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          {media.length > 1 && (
+            <>
+              <button
+                onClick={handlePrev}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white p-3 rounded-full bg-brand-surface/80 border border-brand-border hover:border-brand-accent transition-all cursor-pointer z-50 shadow-xl"
+                aria-label="Previous photo"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+
+              <button
+                onClick={handleNext}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white p-3 rounded-full bg-brand-surface/80 border border-brand-border hover:border-brand-accent transition-all cursor-pointer z-50 shadow-xl"
+                aria-label="Next photo"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </>
+          )}
+
+          <div
+            className="relative max-w-4xl max-h-[85vh] w-full flex flex-col rounded-3xl overflow-hidden bg-brand-surface border border-brand-border shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative max-h-[68vh] w-full bg-black/70 flex items-center justify-center overflow-hidden">
+              <img
+                src={activePhoto.image_url}
+                alt={activePhoto.caption || event.title}
+                className="max-h-[68vh] w-auto max-w-full object-contain"
+              />
+            </div>
+
+            <div className="p-5 bg-brand-surface flex items-center justify-between gap-4 border-t border-brand-border">
+              <div>
+                <p className="text-xs text-brand-accent font-semibold mb-0.5">
+                  {event.title}
+                </p>
+                <p className="text-sm font-bold text-brand-text">
+                  {activePhoto.caption || "Event Moment"}
+                </p>
+              </div>
+
+              <div className="text-xs text-brand-muted font-mono shrink-0">
+                {lightboxIndex + 1} / {media.length}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

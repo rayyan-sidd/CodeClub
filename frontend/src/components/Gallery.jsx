@@ -30,10 +30,10 @@ export default function GalleryMarquee({ galleryItems }) {
 
       <div className="flex justify-center mt-6">
         <Link
-          to="/gallery"
-          className="px-4 py-2 text-sm font-semibold text-brand-bg bg-brand-accent rounded-lg hover:bg-[#0d9668] transition-all cursor-pointer"
+          to="/events"
+          className="px-5 py-2.5 text-sm font-semibold text-brand-bg bg-brand-accent rounded-xl hover:bg-[#0d9668] transition-all cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:scale-105"
         >
-          View Full Gallery →
+          View Event Recaps & Highlights →
         </Link>
       </div>
     </div>

@@ -82,26 +82,27 @@ export default function Team() {
             </div>
           </div>
 
-          {/* Section 2: Student Coordinators & Leads */}
+          {/* Section 2: Student Coordinator */}
           <div>
             <div className="flex items-center justify-center gap-2 mb-8">
               <Award className="w-5 h-5 text-brand-accent" />
               <h2 className="text-xl sm:text-2xl font-bold text-brand-text">
-                Student Coordinators & Leads
+                Student Coordinator
               </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto gap-6">
+            <div className="flex justify-center max-w-sm mx-auto">
               {coordinators.map((member) => (
-                <TeamMemberCard
-                  key={member.id}
-                  name={member.name}
-                  role={member.role}
-                  department={member.department}
-                  photo={member.image}
-                  github={member.github}
-                  linkedin={member.linkedin}
-                  featured
-                />
+                <div key={member.id} className="w-full max-w-xs">
+                  <TeamMemberCard
+                    name={member.name}
+                    role={member.role}
+                    department={member.department}
+                    photo={member.image}
+                    github={member.github}
+                    linkedin={member.linkedin}
+                    featured
+                  />
+                </div>
               ))}
             </div>
           </div>
