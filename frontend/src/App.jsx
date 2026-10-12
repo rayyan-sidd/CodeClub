@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import FloatingSquares from "./components/FloatingSquares";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -11,8 +12,7 @@ import Contact from "./pages/Contact";
 import Learning from "./pages/Learning";
 import EventDetail from "./pages/EventDetail";
 
-import { events } from "./data/mockEvents.js";
-import { getUpcomingEvents } from "./utils/getUpcomingEvents.js";
+import { supabase } from "./lib/supabaseClient.js";
 import { stats } from "./data/stats.js";
 import { focusAreas } from "./data/focusAreas.js";
 import { galleryItems } from "./data/mockgallery.js";
@@ -20,8 +20,34 @@ import { galleryItems } from "./data/mockgallery.js";
 import { Route, Routes, Navigate } from "react-router-dom";
 
 export default function App() {
-  const nextEvent = getUpcomingEvents(events, 1)?.[0] || null;
-  const upcomingEvents = getUpcomingEvents(events, 3) || [];
+  const [nextEvent, setNextEvent] = useState(null);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+
+  // Fetch real upcoming events directly from Supabase
+  useEffect(() => {
+    async function fetchUpcoming() {
+      try {
+        const { data, error } = await supabase
+          .from("events")
+          .select("*")
+          .eq("status", "upcoming")
+          .order("event_date", { ascending: true })
+          .limit(3);
+
+        if (!error && data && data.length > 0) {
+          setNextEvent(data[0]);
+          setUpcomingEvents(data);
+        } else {
+          setNextEvent(null);
+          setUpcomingEvents([]);
+        }
+      } catch (err) {
+        setNextEvent(null);
+        setUpcomingEvents([]);
+      }
+    }
+    fetchUpcoming();
+  }, []);
 
   return (
     <div className="min-h-screen bg-brand-bg text-brand-text relative flex flex-col justify-between overflow-x-hidden">

@@ -2,24 +2,18 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient.js";
 import BentoTile from "../components/BentoTile";
-import { events as mockEvents } from "../data/mockEvents.js";
 import {
   Calendar,
   Sparkles,
   ArrowLeft,
-  Code2,
-  Terminal,
-  Trophy,
   Camera,
   MapPin,
-  Users,
   CheckCircle2,
-  Maximize2,
   X,
   ChevronLeft,
   ChevronRight,
   Bookmark,
-  Share2,
+  AlertCircle,
 } from "lucide-react";
 
 export default function EventDetail() {
@@ -30,9 +24,11 @@ export default function EventDetail() {
   const [error, setError] = useState(null);
   const [lightboxIndex, setLightboxIndex] = useState(null);
 
+  // Strictly query Supabase for this event and its media
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
+      setError(null);
       try {
         const [eventRes, mediaRes] = await Promise.all([
           supabase.from("events").select("*").eq("id", id).single(),
@@ -43,28 +39,17 @@ export default function EventDetail() {
             .order("sort_order", { ascending: true }),
         ]);
 
-        if (eventRes.error || !eventRes.data) {
-          // Fallback to our curated events
-          const fallback = mockEvents.find((e) => String(e.id) === String(id));
-          if (fallback) {
-            setEvent(fallback);
-            setMedia(fallback.media || []);
-            setError(null);
-          } else {
-            setError(eventRes.error || new Error("Event not found"));
-          }
+        if (eventRes.error) {
+          setError(eventRes.error);
         } else {
           setEvent(eventRes.data);
-          setMedia(mediaRes.data || []);
+        }
+
+        if (!mediaRes.error && mediaRes.data) {
+          setMedia(mediaRes.data);
         }
       } catch (err) {
-        const fallback = mockEvents.find((e) => String(e.id) === String(id));
-        if (fallback) {
-          setEvent(fallback);
-          setMedia(fallback.media || []);
-        } else {
-          setError(err);
-        }
+        setError(err);
       } finally {
         setLoading(false);
       }
@@ -91,7 +76,6 @@ export default function EventDetail() {
     setLightboxIndex((prev) => (prev === media.length - 1 ? 0 : prev + 1));
   };
 
-  // Keyboard navigation for photo lightbox
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (lightboxIndex === null) return;
@@ -106,23 +90,26 @@ export default function EventDetail() {
   if (loading)
     return (
       <div className="max-w-5xl mx-auto px-6 py-24 text-center text-brand-muted">
-        Loading event details...
+        Loading event details from Supabase...
       </div>
     );
 
   if (error || !event)
     return (
       <div className="max-w-5xl mx-auto px-6 py-24 text-center">
+        <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-4">
+          <AlertCircle className="w-6 h-6" />
+        </div>
         <p className="text-red-400 font-semibold mb-2">Event Not Found</p>
         <p className="text-xs text-brand-muted mb-6">
-          The requested event record does not exist or has been moved.
+          {error?.message || "This event could not be found in the Supabase database."}
         </p>
         <Link
           to="/events"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-accent text-brand-bg font-semibold rounded-xl text-xs hover:bg-[#0d9668] transition-all"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-accent text-brand-bg font-semibold rounded-xl text-xs hover:bg-[#0d9668] transition-all cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Events & Media</span>
+          <span>Back to Events Hub</span>
         </Link>
       </div>
     );
@@ -133,7 +120,7 @@ export default function EventDetail() {
       <div className="flex items-center justify-between gap-4 mb-6">
         <Link
           to="/events"
-          className="inline-flex items-center gap-2 text-xs font-medium text-brand-muted hover:text-brand-accent transition-colors bg-brand-surface border border-brand-border px-3.5 py-1.5 rounded-xl"
+          className="inline-flex items-center gap-2 text-xs font-medium text-brand-muted hover:text-brand-accent transition-colors bg-brand-surface border border-brand-border px-3.5 py-1.5 rounded-xl cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Events & Media</span>
@@ -175,18 +162,12 @@ export default function EventDetail() {
           <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-2">
             {event.title}
           </h1>
-
-          {event.tagline && (
-            <p className="text-sm sm:text-lg text-emerald-400 font-medium leading-relaxed">
-              {event.tagline}
-            </p>
-          )}
         </div>
       </div>
 
       {/* Bento Grid Architecture */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        {/* Bento Tile 1: The Event Story (Span 2 cols on md/lg) */}
+        {/* Bento Tile 1: The Event Story */}
         <div className="md:col-span-2 bg-brand-surface border border-brand-border hover:border-brand-accent/40 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-xl transition-all">
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -194,11 +175,11 @@ export default function EventDetail() {
                 <Bookmark className="w-4 h-4" />
               </div>
               <h2 className="text-lg font-bold text-brand-text">
-                The Event Story & Mission
+                About the Event
               </h2>
             </div>
             <p className="text-sm text-brand-muted leading-relaxed mb-6">
-              {event.description}
+              {event.description || "Official campus session organized by CodeClub IU Lucknow."}
             </p>
           </div>
 
@@ -208,7 +189,7 @@ export default function EventDetail() {
           </div>
         </div>
 
-        {/* Bento Tile 2: At a Glance Highlights (Span 1 col) */}
+        {/* Bento Tile 2: Key Details */}
         <div className="bg-brand-surface border border-brand-border hover:border-brand-accent/40 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-xl transition-all">
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -216,7 +197,7 @@ export default function EventDetail() {
                 <CheckCircle2 className="w-4 h-4" />
               </div>
               <h2 className="text-lg font-bold text-brand-text">
-                Key Highlights
+                Key Details
               </h2>
             </div>
 
@@ -224,103 +205,47 @@ export default function EventDetail() {
               <li className="flex items-start gap-2.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-accent mt-1.5 shrink-0" />
                 <span>
-                  <strong className="text-brand-text">Format:</strong>{" "}
-                  {event.rounds && event.rounds.length > 0
-                    ? "3 Multi-Stage Rounds"
-                    : "Interactive Exhibition & Demos"}
+                  <strong className="text-brand-text">Status:</strong>{" "}
+                  <span className="capitalize">{event.status}</span>
                 </span>
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-accent mt-1.5 shrink-0" />
                 <span>
                   <strong className="text-brand-text">Eligibility:</strong> Open
-                  to all IU Engineering & Tech Students
+                  to all IU Students
                 </span>
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-accent mt-1.5 shrink-0" />
                 <span>
-                  <strong className="text-brand-text">Recognition:</strong>{" "}
-                  Certificates & Community Honors
+                  <strong className="text-brand-text">Campus:</strong> Integral
+                  University, Kursi Road
                 </span>
               </li>
             </ul>
           </div>
 
           <div className="pt-4 border-t border-brand-border/50 text-xs text-brand-accent font-semibold">
-            Status: {event.status === "completed" ? "Successfully Concluded" : "Upcoming"}
+            Department of Computer Science & Engineering
           </div>
         </div>
       </div>
 
-      {/* Bento Section: The 3 Tournament Rounds (for Code Clash League) */}
-      {event.rounds && event.rounds.length > 0 && (
-        <div className="mb-12">
-          <div className="flex items-center gap-2 mb-6">
-            <Trophy className="w-5 h-5 text-brand-accent" />
-            <h2 className="text-xl font-bold text-brand-text">
-              Tournament Rounds Breakdown
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {event.rounds.map((round, idx) => {
-              const Icon = idx === 0 ? Code2 : idx === 1 ? Terminal : Trophy;
-              const accentColor =
-                idx === 0
-                  ? "text-emerald-400"
-                  : idx === 1
-                  ? "text-amber-400"
-                  : "text-teal-400";
-              const borderHover =
-                idx === 0
-                  ? "hover:border-emerald-500/60"
-                  : idx === 1
-                  ? "hover:border-amber-500/60"
-                  : "hover:border-teal-500/60";
-
-              return (
-                <div
-                  key={idx}
-                  className={`p-6 rounded-3xl bg-brand-surface border border-brand-border ${borderHover} transition-all duration-300 hover:-translate-y-1 shadow-xl flex flex-col justify-between`}
-                >
-                  <div>
-                    <div className="w-12 h-12 rounded-2xl bg-brand-bg border border-brand-border flex items-center justify-center mb-4 shadow-inner">
-                      <Icon className={`w-6 h-6 ${accentColor}`} />
-                    </div>
-                    <div className="text-[11px] font-mono text-brand-muted uppercase tracking-wider mb-1">
-                      Stage 0{idx + 1}
-                    </div>
-                    <h3 className="font-bold text-brand-text text-lg mb-2">
-                      {round.name}
-                    </h3>
-                    <p className="text-xs text-brand-muted leading-relaxed">
-                      {round.desc}
-                    </p>
-                  </div>
-
-                  <div className="pt-4 mt-4 border-t border-brand-border/40 text-[11px] font-semibold text-brand-accent">
-                    Completed Round ✓
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Bento Photo Gallery Grid */}
+      {/* Bento Photo Gallery Grid (from Supabase event_media) */}
       <div className="mb-14">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <Camera className="w-5 h-5 text-brand-accent" />
             <h2 className="text-xl font-bold text-brand-text">
-              Event Photography & Bento Grid
+              Captured Moments & Event Photos
             </h2>
           </div>
-          <span className="text-xs text-brand-muted">
-            Click any photo to expand
-          </span>
+          {media.length > 0 && (
+            <span className="text-xs text-brand-muted">
+              Click any photo to expand
+            </span>
+          )}
         </div>
 
         {media.length > 0 ? (
@@ -342,7 +267,7 @@ export default function EventDetail() {
           </div>
         ) : (
           <div className="p-10 rounded-3xl bg-brand-surface border border-brand-border text-center text-xs text-brand-muted">
-            Photos for this event are being curated and will be uploaded shortly.
+            No photos uploaded for this event in Supabase yet.
           </div>
         )}
       </div>

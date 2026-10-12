@@ -1,64 +1,59 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { events as defaultEvents } from "../data/mockEvents.js";
-import { galleryItems as defaultGalleryItems } from "../data/mockgallery.js";
 import { supabase } from "../lib/supabaseClient.js";
 import {
   Calendar,
   Sparkles,
   ArrowRight,
   Trophy,
-  Code2,
-  Terminal,
-  Layers,
   Search,
   Maximize2,
   X,
   ChevronLeft,
   ChevronRight,
-  Filter,
-  CheckCircle2,
-  Clock,
+  AlertCircle,
+  Camera,
 } from "lucide-react";
 
 export default function Events() {
-  const [eventsList, setEventsList] = useState(defaultEvents);
-  const [galleryList, setGalleryList] = useState(defaultGalleryItems);
+  const [eventsList, setEventsList] = useState([]);
+  const [mediaList, setMediaList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [mediaCategory, setMediaCategory] = useState("All");
   const [lightboxIndex, setLightboxIndex] = useState(null);
 
-  // Sync with Supabase if online
+  // Fetch exclusively from Supabase
   useEffect(() => {
     async function fetchSupabaseData() {
+      setLoading(true);
+      setError(null);
       try {
-        const { data: eventsData, error: eventsErr } = await supabase
-          .from("events")
-          .select("*")
-          .order("event_date", { ascending: false });
+        const [eventsRes, mediaRes] = await Promise.all([
+          supabase
+            .from("events")
+            .select("*")
+            .order("event_date", { ascending: false }),
+          supabase
+            .from("event_media")
+            .select("*")
+            .order("sort_order", { ascending: true }),
+        ]);
 
-        if (!eventsErr && eventsData && eventsData.length > 0) {
-          setEventsList(eventsData);
+        if (eventsRes.error) {
+          setError(eventsRes.error);
+        } else {
+          setEventsList(eventsRes.data || []);
         }
 
-        const { data: mediaData, error: mediaErr } = await supabase
-          .from("event_media")
-          .select("*")
-          .order("sort_order", { ascending: true });
-
-        if (!mediaErr && mediaData && mediaData.length > 0) {
-          const formatted = mediaData.map((item, idx) => ({
-            id: item.id || `sb-${idx}`,
-            title: item.caption || `CodeClub Moment #${idx + 1}`,
-            category: "Code Clash League",
-            date: "Recent",
-            imageUrl: item.image_url,
-          }));
-          setGalleryList([...formatted, ...defaultGalleryItems]);
+        if (!mediaRes.error && mediaRes.data) {
+          setMediaList(mediaRes.data);
         }
-      } catch (e) {
-        // Fallback to local curated events
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchSupabaseData();
@@ -75,13 +70,13 @@ export default function Events() {
   const statusStyles = {
     upcoming: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
     completed: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
+    ongoing: "bg-amber-500/15 text-amber-400 border-amber-500/30",
   };
 
   const filteredEvents = eventsList.filter((event) => {
     const matchesSearch =
-      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (event.description &&
-        event.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
       statusFilter === "all" ? true : event.status === statusFilter;
@@ -89,28 +84,22 @@ export default function Events() {
     return matchesSearch && matchesStatus;
   });
 
-  const filteredMedia =
-    mediaCategory === "All"
-      ? galleryList
-      : galleryList.filter((item) => item.category === mediaCategory);
-
-  const activeMedia = lightboxIndex !== null ? filteredMedia[lightboxIndex] : null;
+  const activeMedia = lightboxIndex !== null ? mediaList[lightboxIndex] : null;
 
   const handlePrev = (e) => {
     e?.stopPropagation();
     setLightboxIndex((prev) =>
-      prev === 0 ? filteredMedia.length - 1 : prev - 1
+      prev === 0 ? mediaList.length - 1 : prev - 1
     );
   };
 
   const handleNext = (e) => {
     e?.stopPropagation();
     setLightboxIndex((prev) =>
-      prev === filteredMedia.length - 1 ? 0 : prev + 1
+      prev === mediaList.length - 1 ? 0 : prev + 1
     );
   };
 
-  // Keyboard navigation for lightbox
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (lightboxIndex === null) return;
@@ -120,7 +109,7 @@ export default function Events() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [lightboxIndex, filteredMedia.length]);
+  }, [lightboxIndex, mediaList.length]);
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-12 z-10">
@@ -134,62 +123,28 @@ export default function Events() {
           Events & Campus Media Hub
         </h1>
         <p className="text-sm sm:text-base text-brand-muted leading-relaxed">
-          From high-intensity coding leagues to campus orientations and exhibition days.
-          Explore our past event recaps, round breakdowns, and photo archives.
+          Explore all our official campus hackathons, workshops, competitive leagues,
+          and photo archives.
         </p>
       </div>
 
-      {/* Featured Banner: Code Clash League (Flagship) */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-surface via-brand-surface to-brand-border/40 border border-brand-accent/30 p-6 sm:p-8 mb-16 shadow-2xl">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="max-w-2xl">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold text-brand-accent uppercase tracking-wider bg-brand-accent/15 px-2.5 py-0.5 rounded-md border border-brand-accent/30">
-                Flagship Completed
-              </span>
-              <span className="text-xs text-brand-muted">August 2026</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-brand-text mb-2">
-              Code Clash League (CCL)
-            </h2>
-            <p className="text-xs sm:text-sm text-brand-muted leading-relaxed mb-4">
-              Our 3-round competitive coding championship where students battled across
-              frontend design, Python code debugging, and live algorithmic problem solving.
-            </p>
-
-            {/* 3 Rounds Pill Group */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div className="p-2.5 rounded-xl bg-brand-bg/80 border border-brand-border flex items-center gap-2 text-xs text-brand-text">
-                <Code2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Round 1: CSS Battle</span>
-              </div>
-              <div className="p-2.5 rounded-xl bg-brand-bg/80 border border-brand-border flex items-center gap-2 text-xs text-brand-text">
-                <Terminal className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>Round 2: Python Debugging</span>
-              </div>
-              <div className="p-2.5 rounded-xl bg-brand-bg/80 border border-brand-border flex items-center gap-2 text-xs text-brand-text">
-                <Trophy className="w-4 h-4 text-teal-400 shrink-0" />
-                <span>Round 3: Live DSA</span>
-              </div>
-            </div>
-          </div>
-
-          <Link
-            to="/events/1"
-            className="shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-brand-accent hover:bg-[#0d9668] text-brand-bg font-semibold rounded-xl text-sm transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:scale-105 cursor-pointer"
-          >
-            <span>View Full Recap & Media</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+      {/* Supabase Error Notice (if any) */}
+      {!loading && error && (
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 mb-10 text-center max-w-2xl mx-auto">
+          <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+          <h3 className="text-sm font-semibold text-red-400 mb-1">
+            Unable to connect to Supabase
+          </h3>
+          <p className="text-xs text-brand-muted">{error.message}</p>
         </div>
-      </div>
+      )}
 
-      {/* Events List Controls */}
+      {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-xl font-bold text-brand-text">All Events & Recaps</h2>
+          <h2 className="text-xl font-bold text-brand-text">All Events</h2>
           <p className="text-xs text-brand-muted">
-            Orientation Day, Club Day, Code Clash League & Upcoming Sessions
+            {eventsList.length} total event{eventsList.length === 1 ? "" : "s"} recorded
           </p>
         </div>
 
@@ -210,8 +165,8 @@ export default function Events() {
           <div className="flex items-center gap-1 bg-brand-surface p-1 rounded-xl border border-brand-border shrink-0">
             {[
               { id: "all", label: "All" },
-              { id: "completed", label: "Completed" },
               { id: "upcoming", label: "Upcoming" },
+              { id: "completed", label: "Completed" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -229,152 +184,150 @@ export default function Events() {
         </div>
       </div>
 
-      {/* Events Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-20">
-        {filteredEvents.map((event) => (
-          <Link
-            to={`/events/${event.id}`}
-            key={event.id}
-            className="group relative flex flex-col justify-between bg-brand-surface border border-brand-border hover:border-brand-accent/60 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-accent/5"
-          >
-            {/* Event Banner */}
-            <div className="relative h-44 w-full bg-brand-bg overflow-hidden">
-              {event.cover_image_url ? (
-                <img
-                  src={event.cover_image_url}
-                  alt={event.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-brand-surface via-brand-border to-brand-bg flex items-center justify-center">
-                  <Sparkles className="w-10 h-10 text-brand-accent/40 animate-pulse" />
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-brand-surface via-transparent to-black/30" />
-
-              {/* Status Pill */}
-              <span
-                className={`absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-full border capitalize backdrop-blur-md ${
-                  statusStyles[event.status] || statusStyles.completed
-                }`}
-              >
-                {event.status}
-              </span>
-
-              {/* Date Tag */}
-              <div className="absolute bottom-3 left-3 flex items-center gap-1.5 text-xs text-brand-text font-mono bg-brand-bg/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-brand-border/60">
-                <Calendar className="w-3 h-3 text-brand-accent" />
-                <span>{formatDate(event.event_date)}</span>
-              </div>
-            </div>
-
-            {/* Event Info */}
-            <div className="p-5 flex-grow flex flex-col justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-brand-text group-hover:text-brand-accent transition-colors mb-1 line-clamp-1">
-                  {event.title}
-                </h3>
-                {event.tagline && (
-                  <p className="text-[11px] text-brand-accent font-medium mb-2">
-                    {event.tagline}
-                  </p>
-                )}
-                <p className="text-xs text-brand-muted line-clamp-3 leading-relaxed mb-4">
-                  {event.description}
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-brand-border/60 flex items-center justify-between text-xs font-semibold text-brand-accent">
-                <span>View Event Details & Photos</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-
-      {/* Integrated Section: Campus Moments & Event Highlights */}
-      <section className="pt-10 border-t border-brand-border/60" id="media-showcase">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-2 text-xs font-semibold text-brand-accent bg-brand-accent/10 border border-brand-accent/20 px-3 py-1 rounded-full mb-3">
-            <Trophy className="w-3.5 h-3.5" />
-            <span>Event Photography & Moments</span>
-          </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-brand-text mb-3">
-            Event Highlights Archive
-          </h2>
-          <p className="text-xs sm:text-sm text-brand-muted">
-            Photos captured during Code Clash League, Club Day exhibitions, and our Orientation Day launch.
-          </p>
-        </div>
-
-        {/* Media Filter Tabs */}
-        <div className="flex items-center justify-center gap-2 flex-wrap mb-8">
-          {["All", "Code Clash League", "Club Day", "Orientation Day"].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => {
-                setMediaCategory(cat);
-                setLightboxIndex(null);
-              }}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                mediaCategory === cat
-                  ? "bg-brand-accent text-brand-bg font-semibold shadow-[0_0_12px_rgba(16,185,129,0.25)]"
-                  : "bg-brand-surface border border-brand-border text-brand-muted hover:text-brand-text hover:border-brand-accent/30"
-              }`}
-            >
-              {cat}
-            </button>
+      {/* Loading Skeleton */}
+      {loading && (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-20">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="h-64 rounded-2xl bg-brand-surface border border-brand-border animate-pulse"
+            />
           ))}
         </div>
+      )}
 
-        {/* Photo Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMedia.map((item, index) => (
-            <div
-              key={item.id || index}
-              onClick={() => setLightboxIndex(index)}
-              className="group relative bg-brand-surface border border-brand-border hover:border-brand-accent/60 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-accent/5 flex flex-col"
+      {/* Empty State */}
+      {!loading && !error && filteredEvents.length === 0 && (
+        <div className="rounded-2xl border border-brand-border bg-brand-surface/40 p-12 text-center max-w-md mx-auto mb-20">
+          <Calendar className="w-12 h-12 text-brand-muted mx-auto mb-3 opacity-50" />
+          <h3 className="text-lg font-semibold text-brand-text mb-1">
+            No events found
+          </h3>
+          <p className="text-xs text-brand-muted mb-4">
+            No events match the current filter in the Supabase database.
+          </p>
+          <button
+            onClick={() => {
+              setSearchQuery("");
+              setStatusFilter("all");
+            }}
+            className="px-4 py-2 text-xs font-semibold text-brand-bg bg-brand-accent rounded-xl hover:bg-[#0d9668] transition-all cursor-pointer"
+          >
+            Clear Filters
+          </button>
+        </div>
+      )}
+
+      {/* Events Grid */}
+      {!loading && filteredEvents.length > 0 && (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-20">
+          {filteredEvents.map((event) => (
+            <Link
+              to={`/events/${event.id}`}
+              key={event.id}
+              className="group relative flex flex-col justify-between bg-brand-surface border border-brand-border hover:border-brand-accent/60 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-accent/5"
             >
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-brand-bg">
-                <img
-                  src={item.imageUrl}
-                  alt={item.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-bg/90 via-brand-bg/20 to-transparent opacity-80 group-hover:opacity-50 transition-opacity" />
+              {/* Event Banner */}
+              <div className="relative h-44 w-full bg-brand-bg overflow-hidden">
+                {event.cover_image_url ? (
+                  <img
+                    src={event.cover_image_url}
+                    alt={event.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-brand-surface via-brand-border to-brand-bg flex items-center justify-center">
+                    <Sparkles className="w-10 h-10 text-brand-accent/40" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-surface via-transparent to-black/30" />
 
-                <span className="absolute top-3 left-3 text-[11px] font-semibold text-brand-accent bg-brand-bg/85 backdrop-blur-md px-2.5 py-1 rounded-md border border-brand-border/60">
-                  {item.category}
+                {/* Status Pill */}
+                <span
+                  className={`absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-full border capitalize backdrop-blur-md ${
+                    statusStyles[event.status] || statusStyles.completed
+                  }`}
+                >
+                  {event.status}
                 </span>
 
-                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-brand-bg/80 backdrop-blur-md p-1.5 rounded-md text-brand-text border border-brand-border/60">
-                  <Maximize2 className="w-4 h-4 text-brand-accent" />
+                {/* Date Tag */}
+                <div className="absolute bottom-3 left-3 flex items-center gap-1.5 text-xs text-brand-text font-mono bg-brand-bg/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-brand-border/60">
+                  <Calendar className="w-3 h-3 text-brand-accent" />
+                  <span>{formatDate(event.event_date)}</span>
                 </div>
               </div>
 
-              <div className="p-4 flex-grow flex flex-col justify-between">
+              {/* Event Info */}
+              <div className="p-5 flex-grow flex flex-col justify-between">
                 <div>
-                  <h3 className="font-semibold text-brand-text text-sm group-hover:text-brand-accent transition-colors mb-1 line-clamp-1">
-                    {item.title}
+                  <h3 className="text-lg font-bold text-brand-text group-hover:text-brand-accent transition-colors mb-2 line-clamp-1">
+                    {event.title}
                   </h3>
-                  {item.description && (
-                    <p className="text-xs text-brand-muted line-clamp-2 leading-relaxed">
-                      {item.description}
-                    </p>
-                  )}
+                  <p className="text-xs text-brand-muted line-clamp-3 leading-relaxed mb-4">
+                    {event.description || "Official CodeClub campus session."}
+                  </p>
                 </div>
 
-                <div className="flex items-center justify-between text-[11px] text-brand-muted/80 mt-3 pt-3 border-t border-brand-border/40">
-                  <span>{item.date}</span>
-                  <span className="text-brand-accent font-medium group-hover:underline">Click to view ↗</span>
+                <div className="pt-3 border-t border-brand-border/60 flex items-center justify-between text-xs font-semibold text-brand-accent">
+                  <span>View Details & Photos</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
-      </section>
+      )}
+
+      {/* Supabase Media Showcase (if media rows exist) */}
+      {mediaList.length > 0 && (
+        <section className="pt-10 border-t border-brand-border/60" id="media-showcase">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-brand-accent bg-brand-accent/10 border border-brand-accent/20 px-3 py-1 rounded-full mb-3">
+              <Camera className="w-3.5 h-3.5" />
+              <span>Event Photo Archive</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-brand-text mb-3">
+              Campus Highlights
+            </h2>
+            <p className="text-xs sm:text-sm text-brand-muted">
+              Live photo uploads from events hosted by CodeClub IU Lucknow.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mediaList.map((item, index) => (
+              <div
+                key={item.id || index}
+                onClick={() => setLightboxIndex(index)}
+                className="group relative bg-brand-surface border border-brand-border hover:border-brand-accent/60 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-accent/5 flex flex-col"
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-brand-bg">
+                  <img
+                    src={item.image_url}
+                    alt={item.caption || "Event moment"}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-brand-bg/90 via-transparent to-black/20 opacity-80 group-hover:opacity-50 transition-opacity" />
+
+                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-brand-bg/80 backdrop-blur-md p-1.5 rounded-md text-brand-text border border-brand-border/60">
+                    <Maximize2 className="w-4 h-4 text-brand-accent" />
+                  </div>
+                </div>
+
+                {item.caption && (
+                  <div className="p-4">
+                    <p className="font-semibold text-brand-text text-sm group-hover:text-brand-accent transition-colors line-clamp-2">
+                      {item.caption}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Lightbox Modal */}
       {activeMedia && (
@@ -390,21 +343,25 @@ export default function Events() {
             <X className="w-6 h-6" />
           </button>
 
-          <button
-            onClick={handlePrev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white p-2.5 rounded-full bg-brand-surface/70 border border-brand-border hover:border-brand-accent hover:bg-brand-surface transition-all cursor-pointer z-50"
-            aria-label="Previous photo"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
+          {mediaList.length > 1 && (
+            <>
+              <button
+                onClick={handlePrev}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white p-2.5 rounded-full bg-brand-surface/70 border border-brand-border hover:border-brand-accent transition-all cursor-pointer z-50"
+                aria-label="Previous photo"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
 
-          <button
-            onClick={handleNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white p-2.5 rounded-full bg-brand-surface/70 border border-brand-border hover:border-brand-accent hover:bg-brand-surface transition-all cursor-pointer z-50"
-            aria-label="Next photo"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
+              <button
+                onClick={handleNext}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white p-2.5 rounded-full bg-brand-surface/70 border border-brand-border hover:border-brand-accent transition-all cursor-pointer z-50"
+                aria-label="Next photo"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </>
+          )}
 
           <div
             className="relative max-w-4xl max-h-[85vh] w-full flex flex-col rounded-2xl overflow-hidden bg-brand-surface border border-brand-border shadow-2xl"
@@ -412,38 +369,17 @@ export default function Events() {
           >
             <div className="relative max-h-[65vh] w-full bg-black/60 flex items-center justify-center overflow-hidden">
               <img
-                src={activeMedia.imageUrl}
-                alt={activeMedia.title}
+                src={activeMedia.image_url}
+                alt={activeMedia.caption || "Event moment"}
                 className="max-h-[65vh] w-auto max-w-full object-contain"
               />
             </div>
 
-            <div className="p-5 bg-brand-surface flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-brand-border">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-semibold text-brand-accent bg-brand-accent/10 px-2.5 py-0.5 rounded-md">
-                    {activeMedia.category}
-                  </span>
-                  {activeMedia.date && (
-                    <span className="text-xs text-brand-muted">
-                      · {activeMedia.date}
-                    </span>
-                  )}
-                </div>
-                <h2 className="text-base font-bold text-brand-text">
-                  {activeMedia.title}
-                </h2>
-                {activeMedia.description && (
-                  <p className="text-xs text-brand-muted mt-0.5">
-                    {activeMedia.description}
-                  </p>
-                )}
+            {activeMedia.caption && (
+              <div className="p-4 bg-brand-surface border-t border-brand-border text-sm text-brand-text font-medium">
+                {activeMedia.caption}
               </div>
-
-              <div className="text-xs text-brand-muted shrink-0">
-                {lightboxIndex + 1} of {filteredMedia.length}
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}
