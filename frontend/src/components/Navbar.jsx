@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Menu, X, LogIn, Sparkles, Mail } from "lucide-react";
 
+import CodeClubLogo from "./CodeClubLogo";
+
 const navLinks = [
   { to: "/", label: "Home" },
   { to: "/practice", label: "Practice" },
@@ -14,11 +16,7 @@ const navLinks = [
 function Logo({ onClick }) {
   return (
     <Link to="/" onClick={onClick} className="flex items-center gap-2.5 min-w-0 group">
-      <img
-        src="/logo.svg"
-        className="h-9 sm:h-11 shrink-0 group-hover:scale-105 transition-transform"
-        alt="CodeClub logo"
-      />
+      <CodeClubLogo className="h-9 sm:h-11 w-auto shrink-0 group-hover:scale-105 transition-transform" />
       <div className="flex flex-col leading-tight">
         <div className="flex items-center gap-2">
           <span

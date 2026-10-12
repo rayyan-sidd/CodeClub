@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import CodeClubLogo from "./CodeClubLogo";
 import {
   Mail,
   MapPin,
@@ -46,11 +47,7 @@ export default function Footer() {
           {/* Col 1: Brand & Bio */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
-              <img
-                src="/logo.svg"
-                className="h-10 shrink-0"
-                alt="CodeClub logo"
-              />
+              <CodeClubLogo className="h-10 w-auto shrink-0" />
               <div className="flex flex-col leading-tight">
                 <span className="text-xl font-bold text-brand-text">
                   Code<span className="text-brand-accent">Club</span>
