@@ -28,8 +28,8 @@ export default function UpcomingEvents({ upcomingEvents }) {
                 <p className="text-brand-muted">{event.description}</p>
                 <div className="mt-2">
                   <Link
-                    to="/Events"
-                    className=" text-sm font-semibold text-brand-accent rounded-lg hover:text-brand-text transition-all cursor-pointer"
+                    to="/events"
+                    className="text-sm font-semibold text-brand-accent hover:text-white transition-all cursor-pointer inline-flex items-center gap-1"
                   >
                     View event →
                   </Link>

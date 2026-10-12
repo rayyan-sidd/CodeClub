@@ -1,38 +1,106 @@
 function getInitials(name) {
   return name
+    .replace(/^(Ms\.|Mr\.|Dr\.)\s+/i, "")
     .split(" ")
     .map((n) => n[0])
     .join("")
+    .slice(0, 2)
     .toUpperCase();
 }
 
-export default function TeamMemberCard({ name, role, photo, featured }) {
-    const sizeClasses = featured ? "w-16 h-16 text-lg" : "w-12 h-12 text-sm";
+function GithubIcon({ className = "w-3.5 h-3.5" }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+    </svg>
+  );
+}
+
+function LinkedinIcon({ className = "w-3.5 h-3.5" }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
+    </svg>
+  );
+}
+
+export default function TeamMemberCard({
+  name,
+  role,
+  department,
+  photo,
+  featured,
+  github,
+  linkedin,
+}) {
+  const avatarSize = featured ? "w-20 h-20 text-xl" : "w-16 h-16 text-base";
+
   return (
     <div
-      className={`bg-brand-stats-bg z-10 backdrop-filter backdrop-blur-sm rounded-lg text-center ${featured ? "p-6 w-44" : "p-4"} border border-transparent hover:scale-105 hover:border-brand-accent transition-all duration-300`}
-      > {photo ? (
-          <img
+      className={`group relative bg-brand-surface border border-brand-border hover:border-brand-accent/60 rounded-2xl p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-accent/5 flex flex-col items-center justify-between z-10`}
+    >
+      <div className="w-full flex flex-col items-center">
+        {photo ? (
+          <div className="relative mb-4">
+            <img
               src={photo}
               alt={name}
-              className={`rounded-full object-cover mx-auto mb-3 ${sizeClasses}`}
-          />
-      ) : (
+              className={`rounded-full object-cover border-2 border-brand-border group-hover:border-brand-accent transition-colors shadow-md ${avatarSize}`}
+            />
+            {featured && (
+              <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-brand-accent border-2 border-brand-surface" />
+            )}
+          </div>
+        ) : (
           <div
-              className={`rounded-full bg-brand-accent text-brand-bg font-semibold flex items-center justify-center mx-auto mb-3 ${featured ? "w-16 h-16 text-lg" : "w-12 h-12 text-sm"}`}
+            className={`rounded-full bg-gradient-to-tr from-brand-surface to-brand-border border-2 border-brand-accent/40 text-brand-accent font-bold flex items-center justify-center mb-4 group-hover:border-brand-accent transition-colors shadow-md ${avatarSize}`}
           >
-              {getInitials(name)}
-          </div>)}
-      <p
-        className={`text-brand-text ${featured ? "text-sm font-medium" : "text-sm"}`}
-      >
-        {name}
-      </p>
-      <p
-        className={`${featured ? "text-brand-accent" : "text-brand-muted"} text-xs mt-1`}
-      >
-        {role}
-      </p>
+            {getInitials(name)}
+          </div>
+        )}
+
+        <h3 className="text-base font-bold text-brand-text group-hover:text-brand-accent transition-colors">
+          {name}
+        </h3>
+
+        <p className="text-xs font-semibold text-brand-accent mt-0.5 mb-1">
+          {role}
+        </p>
+
+        {department && (
+          <p className="text-[11px] text-brand-muted">
+            {department}
+          </p>
+        )}
+      </div>
+
+      {/* Social Icons row */}
+      {(github || linkedin) && (
+        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-brand-border/50 w-full justify-center">
+          {github && (
+            <a
+              href={github}
+              target="_blank"
+              rel="noreferrer"
+              className="p-1.5 rounded-lg text-brand-muted hover:text-brand-accent hover:bg-brand-bg transition-colors"
+              aria-label={`${name}'s GitHub`}
+            >
+              <GithubIcon className="w-4 h-4" />
+            </a>
+          )}
+          {linkedin && (
+            <a
+              href={linkedin}
+              target="_blank"
+              rel="noreferrer"
+              className="p-1.5 rounded-lg text-brand-muted hover:text-brand-accent hover:bg-brand-bg transition-colors"
+              aria-label={`${name}'s LinkedIn`}
+            >
+              <LinkedinIcon className="w-4 h-4" />
+            </a>
+          )}
+        </div>
+      )}
     </div>
   );
 }

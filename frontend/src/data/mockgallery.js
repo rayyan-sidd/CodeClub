@@ -1,18 +1,42 @@
 export const galleryItems = [
-    {
-        title: "Mock Gallery Item 1",
-        imageUrl: "/gallery/CodeClub-1.jpeg",
-    },
-    {
-        title: "Mock Gallery Item 2",
-        imageUrl: "/gallery/CodeClub-2.jpeg",
-    },
-    {
-        title: "Mock Gallery Item 3",
-        imageUrl: "/gallery/CodeClub-3.jpeg",
-    },
-    {
-        title: "Mock Gallery Item 4",
-        imageUrl: "/gallery/CodeClub-4.jpeg",
-    }
-]
+  {
+    id: 1,
+    title: "Webathon 2026 Grand Finale",
+    category: "Hackathons",
+    date: "Sep 2026",
+    description: "Students pitching prototype solutions to campus problems after a 24-hour sprint.",
+    imageUrl: "/gallery/CodeClub-1.jpeg",
+  },
+  {
+    id: 2,
+    title: "Hands-on Fullstack Bootcamp",
+    category: "Workshops",
+    date: "Aug 2026",
+    description: "Mentoring first & second year engineers in React, Tailwind, and Supabase.",
+    imageUrl: "/gallery/CodeClub-2.jpeg",
+  },
+  {
+    id: 3,
+    title: "Code Clash Competitive Arena",
+    category: "Competitions",
+    date: "Jul 2026",
+    description: "Intense algorithmic speed battles between 40+ campus teams.",
+    imageUrl: "/gallery/CodeClub-3.jpeg",
+  },
+  {
+    id: 4,
+    title: "Open Source Day & Git Masterclass",
+    category: "Workshops",
+    date: "Jun 2026",
+    description: "Guiding freshers through making their very first GitHub pull requests.",
+    imageUrl: "/gallery/CodeClub-4.jpeg",
+  },
+  {
+    id: 5,
+    title: "Community Meet & Core Team Sync",
+    category: "Meetups",
+    date: "May 2026",
+    description: "Planning upcoming hackathons and welcoming the new club members.",
+    imageUrl: "/gallery/WhatsApp Image 2026-07-26 at 11.17.05 PM.jpeg",
+  },
+];
